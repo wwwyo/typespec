@@ -1,0 +1,2 @@
+## build
+tsp compile .
