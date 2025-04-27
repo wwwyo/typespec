@@ -64,7 +64,7 @@ namespace Pets {
     @body updatedPet: Pet;
   } | {
     @statusCode statusCode: 404;
-    @body error: NotFoundResponse;
+    @body error: NotFoundError;
   } | {
     @statusCode statusCode: 400;
     @body error: ValidationError;
