@@ -1,44 +1,103 @@
 import "@typespec/http";
 
 using Http;
-@service(#{ title: "Widget Service" })
-namespace DemoService;
 
-model Widget {
-  id: string;
-  weight: int32;
-  color: "red" | "blue";
+@service(#{title: "Pet Store",})
+@server("https://example.com", "Single server endpoint")
+
+namespace PetStore;
+
+model Pet {
+  id: int32;
+
+  @minLength(1)
+  name: string;
+
+  @minValue(0)
+  @maxValue(100)
+  age: int32;
+
+  kind: PetType;
 }
 
-model WidgetList {
-  items: Widget[];
+enum PetType {
+  dog: "dog",
+  cat: "cat",
+  bird: "bird",
+  fish: "fish",
+  other: "other",
+}
+
+@route("/pets")
+namespace Pets {
+  @get
+  op listPets(): {
+    @statusCode statusCode: 200;
+    @body pets: Pet[];
+  };
+
+  @get
+  op getPet(@path petId: int32): {
+    @statusCode statusCode: 200;
+    @body pet: Pet;
+  } | {
+    @statusCode statusCode: 404;
+
+    @body error: NotFoundError;
+  };
+
+  @post
+  op createPet(@body pet: Pet): {
+    @statusCode statusCode: 201;
+    @body newPet: Pet;
+  } | {
+    @statusCode statusCode: 202;
+    @body acceptedPet: Pet;
+  } | {
+    @statusCode statusCode: 400;
+    @body error: ValidationError;
+  };
+
+  @put
+  op updatePet(@path petId: int32, @body pet: Pet): {
+    @statusCode statusCode: 200;
+    @body updatedPet: Pet;
+  } | {
+    @statusCode statusCode: 404;
+    @body error: NotFoundError;
+  } | {
+    @statusCode statusCode: 400;
+    @body error: ValidationError;
+  };
+
+  @delete
+  op deletePet(@path petId: int32): {
+    @statusCode statusCode: 204;
+  } ;
 }
 
 @error
-model Error {
-  code: int32;
+model NotFoundError {
+  code: "NOT_FOUND";
   message: string;
 }
 
-model AnalyzeResult {
-  id: string;
-  analysis: string;
+@error
+model ValidationError {
+  code: "VALIDATION_ERROR";
+  message: string;
+  details: string[];
 }
 
-@route("/widgets")
-@tag("Widgets")
-interface Widgets {
-  /** List widgets */
-  @get list(): WidgetList | Error;
-  /** Read widgets */
-  @get read(@path id: string): Widget | Error;
-  /** Create a widget */
-  @post create(@body body: Widget): Widget | Error;
-  /** Update a widget */
-  @patch update(@path id: string, @body body: Widget): Widget | Error;
-  /** Delete a widget */
-  @delete delete(@path id: string): void | Error;
-
-  /** Analyze a widget */
-  @route("{id}/analyze") @post analyze(@path id: string): AnalyzeResult | Error;
+@error
+model InternalServerError {
+  code: "INTERNAL_SERVER_ERROR";
+  message: string;
 }
+
+
+
+
+
+
+
